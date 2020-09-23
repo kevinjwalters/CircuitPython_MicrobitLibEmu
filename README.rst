@@ -33,10 +33,10 @@ These libraries depend on:
 Usage Example
 =============
 
-The example below shows how the data from the pins is displayed in `enhanced` mode.
-The code ultimately outputs PWM audio on `pad 0`,
-reads an analogue voltage from `pad 1`
-and writes that voltate to `pad 2` as a PWM signal.
+The example below shows how the data from the pins is displayed in ``enhanced`` mode.
+The code ultimately outputs PWM audio on ``pad 0``,
+reads an analogue voltage from ``pad 1``
+and writes that voltage to ``pad 2`` as a PWM signal.
 
 .. code-block:: python
 
