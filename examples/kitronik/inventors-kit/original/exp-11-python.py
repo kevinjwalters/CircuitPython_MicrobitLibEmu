@@ -1,5 +1,7 @@
 from microbit import *
+
 import music
+
 #set frequency and toneLength of the buzzer
 frequency = 440
 toneLength = 500

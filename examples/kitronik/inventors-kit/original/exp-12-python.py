@@ -1,4 +1,5 @@
 from microbit import *
+
 import random
 
 item = 0
