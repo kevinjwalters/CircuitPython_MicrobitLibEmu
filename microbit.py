@@ -1024,9 +1024,9 @@ class MicroBitDisplayViewEnhanced(MicroBitDisplayViewBasic):
                 return  ### Run out of space!
 
             pin_width, pin_height = self._pinSize(next_idx + 1)
-            pin_obj = display_pin.DisplayPin(pin_name, "MP", pin_type,
+            pin_obj = display_pin.DisplayPin(pin_name, pin_type, "MP",
                                              width=pin_width, height=pin_height)
-            pin_entry = [(pin_name, "MP", pin_type),
+            pin_entry = [(pin_name, pin_type, "MP"),
                          (pin_width, pin_height),
                          pin_obj]
             self._pin_data[pin_name] = pin_entry
@@ -1036,9 +1036,9 @@ class MicroBitDisplayViewEnhanced(MicroBitDisplayViewBasic):
         elif pin_entry[0][2] != pin_type:
             ### pin already on display but mode needs changing
             pin_width, pin_height = pin_entry[1]
-            pin_obj = display_pin.DisplayPin(pin_name, "MP", pin_type,
+            pin_obj = display_pin.DisplayPin(pin_name, pin_type, "MP",
                                              width=pin_width, height=pin_height)
-            pin_entry = [(pin_name, "MP", pin_type),
+            pin_entry = [(pin_name, pin_type, "MP"),
                          (pin_width, pin_height),
                          pin_obj]
             self._pin_data[pin_name] = pin_entry
