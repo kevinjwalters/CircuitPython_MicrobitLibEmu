@@ -1,4 +1,4 @@
-### microbit.py v0.34
+### microbit.py v0.35
 ### A partial emulation of MicroPython micro:bit microbit library
 
 ### Tested with an Adafruit CLUE and CircuitPython and 5.3.1
@@ -34,6 +34,7 @@ import collections
 
 ### Need to avoid this style of importing as this may be used with "import *"
 ##from displayio import Bitmap, Group, Palette, TileGrid
+import supervisor
 import displayio
 import terminalio
 
@@ -51,7 +52,7 @@ import audiocore
 try:
     import adafruit_display_text.label
 except ImportError:
-    print("No library: adafruit_display_text")
+    print("No display text library: adafruit_display_text")
 
 ### For accelerometer
 try:
@@ -59,11 +60,18 @@ try:
 except ImportError:
     print("No accelerometer library: adafruit_lsm6ds")
 
-### For compass
+### For magnetometer / compass
 try:
     import adafruit_lis3mdl
 except ImportError:
     print("No magnetometer library: adafruit_lis3mdl")
+
+### For light level
+try:
+    import adafruit_apds9960.apds9960
+except ImportError:
+    print("No light sensor library: adafruit_apds9960")
+
 
 ### For MicroBitDisplayViewEnhanced
 try:
@@ -103,7 +111,7 @@ class ClueSpeaker:
 
     def __init__(self):
         self._audio = None
-        self._sample_len = 35
+        self._sample_len = 21
         sine_wave = array.array("H", _makeSample(self._sample_len))
         self._wave_sample = audiocore.RawSample(sine_wave)
 
@@ -150,7 +158,7 @@ def panic(error_code):
 
 
 def reset():
-    raise NotImplementedError
+    supervisor.reload()
 
 
 ### Some class to manage the calls to update()
@@ -341,6 +349,7 @@ class MicroBitDisplay():
                  led_cols=5,
                  font=MicroBitFonts.STANDARD,
                  font_widths=MicroBitFonts.STANDARD_WIDTHS,
+                 light_sensor=None,
                  exception=False,
                  display_show=True):
         """disp  active display
@@ -358,8 +367,9 @@ class MicroBitDisplay():
         self._initView(display, mode,
                        led_rows=led_rows, led_cols=led_cols)
 
-        ###
-        self.ligtsensorthingy = None   ### TODO
+        self._light_sensor = light_sensor
+        if light_sensor:
+            light_sensor.enable_color = True
         self._showing = None
         self._scrolling = None
         self._led_rows = led_rows
@@ -637,7 +647,11 @@ class MicroBitDisplay():
     ### Rather clever implementation on micro:bit although there is a visible flicker
     def read_light_level(self):
         """ TODO - this is 0-255, reads 30 on a micro:bit at my desk"""
-        raise NotImplementedError
+        if self._light_sensor:
+            ### r,g,b,clear comes back from the APDS9960
+            return self._light_sensor.color_data[3] // 256
+        else:
+            raise RuntimeError("No light sensor configured - missing library?")
 
 
     @property
@@ -1010,6 +1024,7 @@ class MicroBitDisplayViewEnhanced(MicroBitDisplayViewBasic):
         ##print("updatePin", pin_name, pin_type, value)
 
         ### Disable auto_refresh to reduce flicker and increase efficiency
+        ### this reduces a pwm sweep of range(0, 1024, 4) from 40s to 19s
         restore_refresh = None
         if self._display:
             restore_refresh = self._display.auto_refresh
@@ -1596,7 +1611,7 @@ class MicroBitAnalogDigitalPin(MicroBitDigitalPin):
                                            frequency=self._frequency,
                                            duty_cycle=0,
                                            variable_frequency=True)
-            ### microbit behaviour is unused for write_analog(0)
+            ### microbit mode is unused for write_analog(0)
             ### https://forum.micropython.org/viewtopic.php?t=8933&p=50377
             self._mode = "write_analog" if direction == "out" else "music"
             self._deinit = self._deinitAnalog
@@ -1785,7 +1800,7 @@ def _accelToPitchRoll(x, y, z):
 
 
 ### TODO - micro:bit calibrates if not calibrated when methods
-### are called that return data - 
+### are called that return data
 ### ponder storage using nvm module for eeprom-like storage
 ### could use magic identifer number a la microbit and NaN for NA numbers
 class MicroBitCompass:
@@ -2007,8 +2022,17 @@ PinManager.pins.extend([pin5, pin6, pin7, pin8,
 button_a = MicroBitButton(pin5)
 button_b = MicroBitButton(pin11)
 
+
+try:
+    apds9660_sensor = adafruit_apds9960.apds9960.APDS9960(board.I2C())
+except NameError:
+    apds9660_sensor = None
+
 ### This needs to be created after pins and PinManager setup and buttons
-display = MicroBitDisplay(board.DISPLAY, "enhanced")
+display = MicroBitDisplay(board.DISPLAY,
+                          "enhanced",
+                          light_sensor=apds9660_sensor)
+del apds9660_sensor
 
 ### These have some lazy initialisation to stop the instantiation
 ### blowing up if the relevant CircuitPython libraries aren't present in /lib
