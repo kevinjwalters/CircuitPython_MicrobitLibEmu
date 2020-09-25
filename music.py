@@ -1,4 +1,4 @@
-### music.py v0.12
+### music.py v0.13
 ### A partial emulation of MicroPython micro:bit music library
 
 ### Tested with an Adafruit CLUE and CircuitPython and 5.3.1
@@ -225,8 +225,3 @@ def reset():
 
 def update():
     pass
-
-
-### This will put pin0 into music mode which is what the micro:bit library
-### does, perhaps to reserve pin0 for this use
-pitch(0)
